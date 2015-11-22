@@ -1,0 +1,4 @@
+Blind is a horror-escape game. You are blind, in an unknown mansion, and you need to get out... and to escape the ferocious monster behind your back !
+You will need to take care of the sounds surrounding you, so that you do not get lost, or at least, not too much. The panick may trouble and disorientate you, but each room having a different sound environment, you should reach the exit safely.
+This game was made by Pilo and Claire, for their first gamejam.
+Thanks for playing !
