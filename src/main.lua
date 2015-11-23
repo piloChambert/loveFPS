@@ -1,8 +1,8 @@
 require "State"
 require "gameState"
 
-canvasResolution = {w = 320, h = 180}
-screenScale = 4
+canvasResolution = {w = 1280, h = 720}
+screenScale = 1
 fullscreen = false
 azerty = true
 

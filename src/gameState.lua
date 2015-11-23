@@ -130,25 +130,16 @@ wallInvVisibilityChangeRateDown = 130 -- per seconds
 wallInvVisibility = 12
 
 wallWireframe = false
+wallSize = 64
 
 playerRadius = 1
 
 gameState = State()
 function gameState:load()
-	self.playerPosition = {x = 15, y = 0, z = 15}
+	self.playerPosition = {x = 96, y = 0, z = 96}
 	self.playerAngular = {x = 0, y = 0, z = 0} -- angle
 
 	self.sounds = {}
-
-
-	table.insert(self.sounds, StaticSound("engine.wav", 155, 0, 120, 5, 10))
-	table.insert(self.sounds, StaticSound("water_fall.wav", 90, 0, 100, 5, 10))
-	--table.insert(self.sounds, StaticSound("monster.wav", 90, 0, 190, 15, 0))
-
-	table.insert(self.sounds, StaticSound("water_fall.wav", 40, 0, 0, 5, 10))
-	table.insert(self.sounds, StaticSound("fireplace.wav", 110, 0, 60, 5, 0))
-	table.insert(self.sounds, StaticSound("door.wav", 50, 0, 10, 2, 0))
-	table.insert(self.sounds, StaticSound("siren.wav", 185, 0, 115, 5, 10))
 
 	self.footstepSound = StaticSound("footsteps_wood.wav", 0, 0, 0, 0, 0)
 	self.footstepSound.source:setVolume(0)
@@ -226,10 +217,11 @@ function gameState:load()
     	vec4 effect( vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords ) {
       		vec4 texcolor = Texel(texture, uv.xy);
 
-      		number light = 1 - max(min(length(pos * 0.02), 1), 0);
+      		//number light = 1 - max(min(length(pos * 0.02), 1), 0);
       		//number light = coneLight(vec3(0, 0, 0), vec3(0, 0, -1), pos);
+      		number light = 1.0;
 
-      		texcolor.rgb *= light;
+      		texcolor.rgb *= color.a * light;
 
       		return texcolor;
     	}
@@ -275,8 +267,8 @@ function gameState:update(dt)
 		changeState(gameoverState)
 	end
 
-	local ptx = math.floor(self.playerPosition.x / wallLength)
-	local pty = math.floor(self.playerPosition.z / wallLength)
+	local ptx = math.floor(self.playerPosition.x / wallSize)
+	local pty = math.floor(self.playerPosition.z / wallSize)
 
 	if ptx == 18 and pty == 11 then
 		changeState(endState)
@@ -299,12 +291,12 @@ function gameState:update(dt)
 
 	local isMoving = false
 	local isRunning = false
-	local playerSpeed = 8.0
+	local playerSpeed = 48.0
 
 	-- is player running?
 	if love.keyboard.isDown("lshift") then
 		isRunning = true
-		playerSpeed = 14.0
+		playerSpeed = 92.0
 	end
 
 	if love.keyboard.isDown(fwdKey) then
@@ -329,19 +321,19 @@ function gameState:update(dt)
 
 	-- clamp displacement
 	if playerDisplacement.x < 0 and self.level.data[(ptx - 1 + pty * self.level.width) + 1] ~= 0 then
-		playerDisplacement.x = math.max(playerDisplacement.x, ptx * wallLength - self.playerPosition.x + playerRadius)
+		playerDisplacement.x = math.max(playerDisplacement.x, ptx * wallSize - self.playerPosition.x + playerRadius)
 	end
 
 	if playerDisplacement.x > 0 and self.level.data[(ptx + 1 + pty * self.level.width) + 1] ~= 0 then
-		playerDisplacement.x = math.min(playerDisplacement.x, (ptx + 1) * wallLength - self.playerPosition.x - playerRadius)
+		playerDisplacement.x = math.min(playerDisplacement.x, (ptx + 1) * wallSize - self.playerPosition.x - playerRadius)
 	end
 
 	if playerDisplacement.z < 0 and self.level.data[(ptx + (pty - 1) * self.level.width) + 1] ~= 0 then
-		playerDisplacement.z = math.max(playerDisplacement.z, pty * wallLength - self.playerPosition.z + playerRadius)
+		playerDisplacement.z = math.max(playerDisplacement.z, pty * wallSize - self.playerPosition.z + playerRadius)
 	end
 
 	if playerDisplacement.z > 0 and self.level.data[(ptx + (pty + 1) * self.level.width) + 1] ~= 0 then
-		playerDisplacement.z = math.min(playerDisplacement.z, (pty + 1) * wallLength - self.playerPosition.z - playerRadius)
+		playerDisplacement.z = math.min(playerDisplacement.z, (pty + 1) * wallSize - self.playerPosition.z - playerRadius)
 	end
 
 
@@ -428,9 +420,9 @@ function gameState:transformPoint(p)
 	return {x = x, y = y, z = z}
 end
 
-function gameState:drawWall(x1, z1, x2, z2, min, max, texture)
-	local p1 = self:transformPoint({x = x1, y = 1, z = z1})
-	local p2 = self:transformPoint({x = x2, y = 1, z = z2})
+function gameState:drawWall(x1, z1, x2, z2, min, max, texture, intensity)
+	local p1 = self:transformPoint({x = x1, y = 0, z = z1})
+	local p2 = self:transformPoint({x = x2, y = 0, z = z2})
 
 	-- draw if visible
 	if not (p1.z >= 0 and p2.z >= 0) then
@@ -440,42 +432,39 @@ function gameState:drawWall(x1, z1, x2, z2, min, max, texture)
 		local C = {x = p2.x, y = min, z = p2.z}
 		local D = {x = p2.x, y = max, z = p2.z}
 
-		local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, (1 - p1.y) * 255,		0, 		0,	0},
-											 { C.x, C.y, C.z, 0, 255 * p2.y,			0, 		0,	0},
-											 { D.x, D.y, D.z, 0, 255 * p2.y, 			255, 	0,	0},
-											 { B.x, B.y, B.z, 0, (1 - p1.y) * 255, 	255,	0,	0}}, texture)
+		local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, (1 - p1.y) * 255,		0, 		0,	intensity},
+											 { C.x, C.y, C.z, 0, 255 * p2.y,			0, 		0,	intensity},
+											 { D.x, D.y, D.z, 0, 255 * p2.y, 			255, 	0,	intensity},
+											 { B.x, B.y, B.z, 0, (1 - p1.y) * 255, 		255,	0,	intensity}}, texture)
 		love.graphics.draw(mesh)
 	end
 end
 
 function gameState:drawFloorTile(x, y)
-	local A = self:transformPoint({x = x * wallLength, y = 5, z = y * wallLength})
-	local B = self:transformPoint({x = (x + 1) * wallLength, y = 5, z = y * wallLength})
-	local C = self:transformPoint({x = (x + 1) * wallLength, y = 5, z = (y + 1) * wallLength})
-	local D = self:transformPoint({x = x * wallLength, y = 5, z = (y + 1) * wallLength})
+	local A = self:transformPoint({x = x * wallSize, y = wallSize * 0.5, z = y * wallSize})
+	local B = self:transformPoint({x = (x + 1) * wallSize, y = wallSize * 0.5, z = y * wallSize})
+	local C = self:transformPoint({x = (x + 1) * wallSize, y = wallSize * 0.5, z = (y + 1) * wallSize})
+	local D = self:transformPoint({x = x * wallSize, y = wallSize * 0.5, z = (y + 1) * wallSize})
 
-	local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, 0,		0, 		0,	0},
-										 { B.x, B.y, B.z, 0, 255,	0, 		0,	0},
-										 { C.x, C.y, C.z, 0, 255,	255, 	0,	0},
-										 { D.x, D.y, D.z, 0, 0, 	255,	0,	0}}, self.floorTexture)
+	local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, 0,		0, 		0,	255},
+										 { B.x, B.y, B.z, 0, 255,	0, 		0,	255},
+										 { C.x, C.y, C.z, 0, 255,	255, 	0,	255},
+										 { D.x, D.y, D.z, 0, 0, 	255,	0,	255}}, self.floorTexture)
 	love.graphics.draw(mesh)
 end
 
 function gameState:drawRoofTile(x, y)
-	local A = self:transformPoint({x = x * wallLength, y = -5, z = y * wallLength})
-	local B = self:transformPoint({x = (x + 1) * wallLength, y = -5, z = y * wallLength})
-	local C = self:transformPoint({x = (x + 1) * wallLength, y = -5, z = (y + 1) * wallLength})
-	local D = self:transformPoint({x = x * wallLength, y = -5, z = (y + 1) * wallLength})
+	local A = self:transformPoint({x = x * wallSize, y = -wallSize * 0.5, z = y * wallSize})
+	local B = self:transformPoint({x = (x + 1) * wallSize, y = -wallSize * 0.5, z = y * wallSize})
+	local C = self:transformPoint({x = (x + 1) * wallSize, y = -wallSize * 0.5, z = (y + 1) * wallSize})
+	local D = self:transformPoint({x = x * wallSize, y = -wallSize * 0.5, z = (y + 1) * wallSize})
 
-	local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, 0,		0, 		0,	0},
-										 { B.x, B.y, B.z, 0, 255,	0, 		0,	0},
-										 { C.x, C.y, C.z, 0, 255,	255, 	0,	0},
-										 { D.x, D.y, D.z, 0, 0, 	255,	0,	0}}, self.roofTexture)
+	local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, 0,		0, 		0,	255},
+										 { B.x, B.y, B.z, 0, 255,	0, 		0,	255},
+										 { C.x, C.y, C.z, 0, 255,	255, 	0,	255},
+										 { D.x, D.y, D.z, 0, 0, 	255,	0,	255}}, self.roofTexture)
 	love.graphics.draw(mesh)
 end
-
-
-wallLength = 10
 
 function gameState:drawBlockFloor(x, y)
 	local tile = self.level.data[(x + y * self.level.width) + 1]
@@ -509,24 +498,24 @@ function gameState:drawBlockWall(x, y)
 
 	-- nothing to draw
 	if tile ~= 0 then
-		local min = -5
-		local max = 5
+		local min = -wallSize * 0.5
+		local max = wallSize * 0.5
 
 		-- else block == 1
-		if x > 0 and self.level.data[(x - 1 + y * self.level.width) + 1] == 0 and self.playerPosition.x <= x * wallLength then
-			self:drawWall(x * wallLength, y * wallLength, x * wallLength, (y + 1) * wallLength, min, max, self.textures[tile])
+		if x > 0 and self.level.data[(x - 1 + y * self.level.width) + 1] == 0 and self.playerPosition.x <= x * wallSize then
+			self:drawWall(x * wallSize, y * wallSize, x * wallSize, (y + 1) * wallSize, min, max, self.textures[tile], 255)
 		end
 
-		if x < self.level.width - 1 and self.level.data[(x + 1 + y * self.level.width) + 1] == 0 and self.playerPosition.x >= (x + 1) * wallLength then
-			self:drawWall((x + 1) * wallLength, y * wallLength, (x + 1) * wallLength, (y + 1) * wallLength, min, max, self.textures[tile])
+		if x < self.level.width - 1 and self.level.data[(x + 1 + y * self.level.width) + 1] == 0 and self.playerPosition.x >= (x + 1) * wallSize then
+			self:drawWall((x + 1) * wallSize, y * wallSize, (x + 1) * wallSize, (y + 1) * wallSize, min, max, self.textures[tile], 255)
 		end
 
-		if y > 0 and self.level.data[(x + (y - 1) * self.level.width) + 1] == 0 and self.playerPosition.z <= y * wallLength then
-			self:drawWall(x * wallLength, y * wallLength, (x + 1) * wallLength, y * wallLength, min, max, self.textures[tile])
+		if y > 0 and self.level.data[(x + (y - 1) * self.level.width) + 1] == 0 and self.playerPosition.z <= y * wallSize then
+			self:drawWall(x * wallSize, y * wallSize, (x + 1) * wallSize, y * wallSize, min, max, self.textures[tile], 128)
 		end
 
-		if y < self.level.height - 1 and self.level.data[(x + (y + 1) * self.level.width) + 1] == 0 and self.playerPosition.z >= (y + 1) * wallLength then
-			self:drawWall(x * wallLength, (y + 1) * wallLength, (x + 1) * wallLength, (y + 1) * wallLength, min, max, self.textures[tile])
+		if y < self.level.height - 1 and self.level.data[(x + (y + 1) * self.level.width) + 1] == 0 and self.playerPosition.z >= (y + 1) * wallSize then
+			self:drawWall(x * wallSize, (y + 1) * wallSize, (x + 1) * wallSize, (y + 1) * wallSize, min, max, self.textures[tile], 128)
 		end
 	end
 end
