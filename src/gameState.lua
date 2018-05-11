@@ -26,10 +26,10 @@ function Monster.new()
 	local self = setmetatable({}, Monster)
 
 	self.timer = 0
-	self.sound = love.audio.newSource("monster.mp3", "static")
+	self.sound = love.audio.newSource("monster.wav", "static")
 	self.sound:setAttenuationDistances(3, 0)
 
-	self.attackSound = love.audio.newSource("attack.mp3", "static")
+	self.attackSound = love.audio.newSource("attack.wav", "static")
 	self.attackSound:setAttenuationDistances(3, 0)
 
 
@@ -435,7 +435,9 @@ function gameState:drawWall(x1, z1, x2, z2, min, max, texture, intensity)
 		local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, (1 - p1.y) * 255,		0, 		0,	intensity},
 											 { C.x, C.y, C.z, 0, 255 * p2.y,			0, 		0,	intensity},
 											 { D.x, D.y, D.z, 0, 255 * p2.y, 			255, 	0,	intensity},
-											 { B.x, B.y, B.z, 0, (1 - p1.y) * 255, 		255,	0,	intensity}}, texture)
+											 { B.x, B.y, B.z, 0, (1 - p1.y) * 255, 		255,	0,	intensity}})
+		mesh:setTexture(texture)
+
 		love.graphics.draw(mesh)
 	end
 end
@@ -449,7 +451,9 @@ function gameState:drawFloorTile(x, y)
 	local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, 0,		0, 		0,	255},
 										 { B.x, B.y, B.z, 0, 255,	0, 		0,	255},
 										 { C.x, C.y, C.z, 0, 255,	255, 	0,	255},
-										 { D.x, D.y, D.z, 0, 0, 	255,	0,	255}}, self.floorTexture)
+										 { D.x, D.y, D.z, 0, 0, 	255,	0,	255}})
+	mesh:setTexture(self.floorTexture)
+
 	love.graphics.draw(mesh)
 end
 
@@ -462,7 +466,9 @@ function gameState:drawRoofTile(x, y)
 	local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, 0,		0, 		0,	255},
 										 { B.x, B.y, B.z, 0, 255,	0, 		0,	255},
 										 { C.x, C.y, C.z, 0, 255,	255, 	0,	255},
-										 { D.x, D.y, D.z, 0, 0, 	255,	0,	255}}, self.roofTexture)
+										 { D.x, D.y, D.z, 0, 0, 	255,	0,	255}})
+	mesh:setTexture(self.roofTexture)
+
 	love.graphics.draw(mesh)
 end
 
@@ -527,10 +533,12 @@ function gameState:drawObject(x, z)
 	local C = {x = p.x + 4, y = p.y, z = p.z}
 	local D = {x = p.x - 4, y = p.y, z = p.z}
 
-	local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, 0,		0, 		0,	0},
-										 { B.x, B.y, B.z, 0, 255,	0, 		0,	0},
-										 { C.x, C.y, C.z, 0, 255,	255, 	0,	0},
-										 { D.x, D.y, D.z, 0, 0, 	255,	0,	0}}, self.roofTexture)
+	local mesh = love.graphics.newMesh({ { A.x, A.y, A.z, 0, 0,		0, 		0,	255},
+										 { B.x, B.y, B.z, 0, 255,	0, 		0,	255},
+										 { C.x, C.y, C.z, 0, 255,	255, 	0,	255},
+										 { D.x, D.y, D.z, 0, 0, 	255,	0,	255}})
+	mesh:setTexture(self.roofTexture)
+
 	love.graphics.draw(mesh)
 end
 
@@ -540,7 +548,7 @@ function gameState:draw()
 
 	-- compute projection matrix
 	local near = 1
-	local far = 40
+	local far = 1024
 	local ratio = winW / winH
 	local fov = math.tan(40.0 * math.pi / 360.0)
 	local projectionMatrix = {

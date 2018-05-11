@@ -174,7 +174,7 @@ function love.draw()
 	-- if we have a canvas
 	if mainCanvas ~= nil then
 		love.graphics.setCanvas(mainCanvas)
-		mainCanvas:clear()
+		love.graphics.clear()
 
     	states[#states]:draw()
 
